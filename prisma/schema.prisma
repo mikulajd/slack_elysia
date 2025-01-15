@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId                Int            @id @default(autoincrement())
+  firstName             String
+  lastName              String
+  email                 String         @unique
+  /**
+   * Initiator a recipient by sa urcite dalo nejako lepsie.
+   * Napr. ak by konverzacia bola pre viac ako  2 pouzivatelov riesil by
+   * som to asi cez nejaku M:N tabulku.
+   */
+  intiatedConversations Conversation[] @relation("initiator")
+  recievedConversations Conversation[] @relation("recipient")
+
+  messages Message[] @relation("user")
+
+  reactions Reaction[] @relation("user")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  conversationId Int @id @default(autoincrement())
+
+  initiator   User @relation("initiator", fields: [initiatorId], references: [userId])
+  initiatorId Int
+
+  recipient   User @relation("recipient", fields: [recipientId], references: [userId])
+  recipientId Int
+
+  //spravy v konverzacii
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /**
+   * Chcel som pridat nejaky check aby recipientId!=initiatorId ale
+   * nevedel som nic najst/nasiel som len post z 2023 kde pisu ze v prisme
+   * check constrainty nie su
+   */
+}
+
+model Message {
+  messageId Int @id @default(autoincrement())
+
+  //Odosielatel
+  user   User @relation("user", fields: [userId], references: [userId])
+  userId Int
+
+  //Konverzacia do ktorej sprava patri
+  conversation   Conversation @relation(fields: [conversationId], references: [conversationId])
+  conversationId Int
+
+  messageContent String @db.Text()
+
+  reactions Reaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //Zatial iba textove spravy
+}
+
+model ReactionType {
+  reactionTypeId Int        @id @default(autoincrement())
+  reactions      Reaction[] @relation("reactionType")
+  reactionValue  String //Je toto OK alebo maju emoji nejaky vlasnty datovy typ?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reaction {
+  reactionId Int @id @default(autoincrement())
+
+  //Typ reakcie
+  reactionType   ReactionType @relation("reactionType", fields: [reactionTypeId], references: [reactionTypeId])
+  reactionTypeId Int
+
+  //Odosielatel
+  user   User @relation("user", fields: [userId], references: [userId])
+  userId Int
+
+  //Sprava na ktoru bolo reagovane
+  message   Message @relation(fields: [messageId], references: [messageId])
+  messageId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

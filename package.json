@@ -1,0 +1,23 @@
+{
+  "name": "slack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc src/index.ts --outDir dist",
+    "start": "NODE_ENV=production node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@elysiajs/node": "^1.2.3",
+    "@prisma/client": "^6.2.1",
+    "elysia": "^1.2.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
