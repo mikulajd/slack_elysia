@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 
 export async function hashPassword(password: string) {
     try {
-        // Generate hash
         const hashedPassword = await bcrypt.hash(password, 10,);
         console.log(`Hashed Password: ${hashedPassword}`);
         return hashedPassword;
