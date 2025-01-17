@@ -1,7 +1,5 @@
 import bcrypt from 'bcrypt';
 
-const secretKey = process.env.SECRET_KEY;
-
 export async function hashPassword(password: string) {
     try {
         // Generate hash
