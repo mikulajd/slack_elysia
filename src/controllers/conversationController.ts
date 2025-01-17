@@ -19,14 +19,12 @@ const ConversationController = {
         }
         return conversation;
     },
-    async createConversation(userId: number, options: { initiatorId: number, recipientId: number, conversationName?: string }) {
-        const { initiatorId, recipientId, conversationName } = options;
-        if (userId != initiatorId && userId != recipientId) {
-            return "You can't create conversation between other people"
-        }
+    async createConversation(userId: number, options: { recipientId: number, conversationName?: string }) {
+        const { recipientId, conversationName } = options;
+
         return await db.conversation.create({
             data: {
-                initiatorId: initiatorId,
+                initiatorId: userId,
                 recipientId: recipientId,
                 conversationName: conversationName,
             }
