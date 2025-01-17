@@ -5,7 +5,7 @@ const secretKey = process.env.SECRET_KEY;
 export async function hashPassword(password: string) {
     try {
         // Generate hash
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10,);
         console.log(`Hashed Password: ${hashedPassword}`);
         return hashedPassword;
     } catch (error) {
