@@ -9,19 +9,21 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  // provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+//Pouzivatel
 model User {
   userId                Int            @id @default(autoincrement())
   firstName             String
   lastName              String
+  password              String
   email                 String         @unique
   /**
-   * Initiator a recipient by sa urcite dalo nejako lepsie.
-   * Napr. ak by konverzacia bola pre viac ako  2 pouzivatelov riesil by
-   * som to asi cez nejaku M:N tabulku.
+   * Ak by konverzacia bola pre viac ako  2 pouzivatelov riesil by
+   * som to cez nejaku M:N tabulku.
    */
   intiatedConversations Conversation[] @relation("initiator")
   recievedConversations Conversation[] @relation("recipient")
@@ -34,13 +36,16 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+//Konverzacie
 model Conversation {
   conversationId Int @id @default(autoincrement())
 
-  initiator   User @relation("initiator", fields: [initiatorId], references: [userId])
+  conversationName String?
+
+  initiator   User @relation("initiator", fields: [initiatorId], references: [userId], onDelete: Cascade)
   initiatorId Int
 
-  recipient   User @relation("recipient", fields: [recipientId], references: [userId])
+  recipient   User @relation("recipient", fields: [recipientId], references: [userId], onDelete: Cascade)
   recipientId Int
 
   //spravy v konverzacii
@@ -56,6 +61,7 @@ model Conversation {
    */
 }
 
+//Spravy
 model Message {
   messageId Int @id @default(autoincrement())
 
@@ -64,10 +70,14 @@ model Message {
   userId Int
 
   //Konverzacia do ktorej sprava patri
-  conversation   Conversation @relation(fields: [conversationId], references: [conversationId])
+  conversation   Conversation @relation(fields: [conversationId], references: [conversationId], onDelete: Cascade)
   conversationId Int
 
-  messageContent String @db.Text()
+  parent   Message?  @relation("MessageToParent", fields: [parentId], references: [messageId], onDelete: SetNull)
+  parentId Int?
+  replies  Message[] @relation("MessageToParent")
+
+  messageContent String
 
   reactions Reaction[]
 
@@ -77,30 +87,34 @@ model Message {
   //Zatial iba textove spravy
 }
 
+//Typy reakcii
 model ReactionType {
   reactionTypeId Int        @id @default(autoincrement())
   reactions      Reaction[] @relation("reactionType")
-  reactionValue  String //Je toto OK alebo maju emoji nejaky vlasnty datovy typ?
+  reactionValue  String     @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+//Reakcie
 model Reaction {
   reactionId Int @id @default(autoincrement())
 
   //Typ reakcie
-  reactionType   ReactionType @relation("reactionType", fields: [reactionTypeId], references: [reactionTypeId])
+  reactionType   ReactionType @relation("reactionType", fields: [reactionTypeId], references: [reactionTypeId], onDelete: Cascade)
   reactionTypeId Int
 
   //Odosielatel
-  user   User @relation("user", fields: [userId], references: [userId])
+  user   User @relation("user", fields: [userId], references: [userId], onDelete: Cascade)
   userId Int
 
   //Sprava na ktoru bolo reagovane
-  message   Message @relation(fields: [messageId], references: [messageId])
+  message   Message @relation(fields: [messageId], references: [messageId], onDelete: Cascade)
   messageId Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, messageId], name: "oneReactionPerUser")
 }

@@ -8,15 +8,22 @@
     "build": "tsc src/index.ts --outDir dist",
     "start": "NODE_ENV=production node dist/index.js"
   },
+  "prisma": {
+    "seed": "node scripts/seed.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@elysiajs/node": "^1.2.3",
+    "@elysiajs/swagger": "^1.2.0",
     "@prisma/client": "^6.2.1",
+    "bcrypt": "^5.1.1",
     "elysia": "^1.2.10"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.10.6",
+    "prisma": "^6.2.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }

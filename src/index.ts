@@ -1,10 +1,15 @@
 import { Elysia } from 'elysia'
 import { node } from '@elysiajs/node'
+import { authRoutes } from './routes/authRoutes';
+import { slackRoutes } from './routes/slackRoutes';
+import { swagger } from '@elysiajs/swagger'
 
 const app = new Elysia({ adapter: node() })
-    .get('/', () => 'Hello Elysia')
-    .listen(3000, ({ hostname, port }) => {
+    .use(swagger())
+    .use(authRoutes)
+    .use(slackRoutes)
+    .listen(3000, ({ port }) => {
         console.log(
-            `🦊 Elysia is running at ${hostname}:${port}`
+            `Server is running at port ${port}`
         )
-    })
+    });
