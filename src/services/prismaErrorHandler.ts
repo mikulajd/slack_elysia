@@ -13,10 +13,3 @@ export function handlePrismaError(error) {
         return Error("Unexpected error occured");
     }
 }
-export class PrismaError extends Error {
-    constructor(public message
-        : string) {
-        super(message);
-        this.name = 'PrismaError';
-    }
-}

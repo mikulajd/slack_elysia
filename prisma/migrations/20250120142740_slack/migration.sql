@@ -1,7 +1,17 @@
--- RedefineTables
-PRAGMA defer_foreign_keys=ON;
-PRAGMA foreign_keys=OFF;
-CREATE TABLE "new_Conversation" (
+-- CreateTable
+CREATE TABLE "User" (
+    "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "refreshToken" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Conversation" (
     "conversationId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "conversationName" TEXT,
     "initiatorId" INTEGER NOT NULL,
@@ -11,10 +21,9 @@ CREATE TABLE "new_Conversation" (
     CONSTRAINT "Conversation_initiatorId_fkey" FOREIGN KEY ("initiatorId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Conversation_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE
 );
-INSERT INTO "new_Conversation" ("conversationId", "conversationName", "createdAt", "initiatorId", "recipientId", "updatedAt") SELECT "conversationId", "conversationName", "createdAt", "initiatorId", "recipientId", "updatedAt" FROM "Conversation";
-DROP TABLE "Conversation";
-ALTER TABLE "new_Conversation" RENAME TO "Conversation";
-CREATE TABLE "new_Message" (
+
+-- CreateTable
+CREATE TABLE "Message" (
     "messageId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "userId" INTEGER NOT NULL,
     "conversationId" INTEGER NOT NULL,
@@ -26,10 +35,17 @@ CREATE TABLE "new_Message" (
     CONSTRAINT "Message_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation" ("conversationId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Message_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Message" ("messageId") ON DELETE SET NULL ON UPDATE CASCADE
 );
-INSERT INTO "new_Message" ("conversationId", "createdAt", "messageContent", "messageId", "parentId", "updatedAt", "userId") SELECT "conversationId", "createdAt", "messageContent", "messageId", "parentId", "updatedAt", "userId" FROM "Message";
-DROP TABLE "Message";
-ALTER TABLE "new_Message" RENAME TO "Message";
-CREATE TABLE "new_Reaction" (
+
+-- CreateTable
+CREATE TABLE "ReactionType" (
+    "reactionTypeId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "reactionValue" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Reaction" (
     "reactionId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "reactionTypeId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -40,9 +56,12 @@ CREATE TABLE "new_Reaction" (
     CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Reaction_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "Message" ("messageId") ON DELETE CASCADE ON UPDATE CASCADE
 );
-INSERT INTO "new_Reaction" ("createdAt", "messageId", "reactionId", "reactionTypeId", "updatedAt", "userId") SELECT "createdAt", "messageId", "reactionId", "reactionTypeId", "updatedAt", "userId" FROM "Reaction";
-DROP TABLE "Reaction";
-ALTER TABLE "new_Reaction" RENAME TO "Reaction";
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReactionType_reactionValue_key" ON "ReactionType"("reactionValue");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Reaction_userId_messageId_key" ON "Reaction"("userId", "messageId");
-PRAGMA foreign_keys=ON;
-PRAGMA defer_foreign_keys=OFF;

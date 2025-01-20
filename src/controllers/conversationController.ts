@@ -1,3 +1,4 @@
+import { error } from 'elysia';
 import db from '../db/prismaClient';
 import { handlePrismaError } from '../services/prismaErrorHandler';
 
@@ -28,6 +29,9 @@ abstract class ConversationController {
     } static async createConversation(userId: number, options: { recipientId: number, conversationName?: string }) {
         try {
             const { recipientId, conversationName } = options;
+            if (recipientId == userId) {
+                return error(400, { message: 'You cannot create a conversation with yourself' })
+            }
 
             return await db.conversation.create({
                 data: {
