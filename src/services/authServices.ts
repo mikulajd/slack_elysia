@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 export async function hashPassword(password: string) {
     try {
         const hashedPassword = await bcrypt.hash(password, 10,);
-        console.log(`Hashed Password: ${hashedPassword}`);
         return hashedPassword;
     } catch (error) {
         console.error('Error hashing password:', error);
@@ -18,4 +17,12 @@ export async function comparePassword(password, storedHash) {
         console.error('Error comparing password:', error);
     }
 }
+
+export function userInfo(user) {
+    return {
+        userId: user.userId,
+        email: user.email
+    }
+}
+
 

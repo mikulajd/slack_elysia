@@ -1,44 +1,58 @@
 import db from '../db/prismaClient';
+import { handlePrismaError } from '../services/prismaErrorHandler';
 
-const ReactionController = {
+abstract class ReactionController {
 
-    async addReaction(userId: number, options: { reactionTypeId: number, messageId: number, }) {
-        const { messageId, reactionTypeId } = options
 
-        return await db.reaction.create({
-            data: {
-                userId: userId,
-                reactionTypeId: reactionTypeId,
-                messageId: messageId,
-            }
-        })
-    },
-
-    async editReaction(userId: number, options: { reactionId: number, reactionTypeId: number }) {
-        const { reactionId, reactionTypeId } = options;
-        return await db.reaction.update(
-            {
-                where: {
-                    reactionId: reactionId,
-                    userId: userId
-                },
+    static async addReaction(userId: number, options: { reactionTypeId: number, messageId: number, }) {
+        try {
+            const { messageId, reactionTypeId } = options
+            return await db.reaction.create({
                 data: {
+                    userId: userId,
                     reactionTypeId: reactionTypeId,
+                    messageId: messageId,
                 }
             })
-    },
+        } catch (error) {
+            return handlePrismaError(error);
+
+        }
+    }
+    static async editReaction(userId: number, options: { reactionId: number, reactionTypeId: number }) {
+        try {
+            const { reactionId, reactionTypeId } = options;
+            return await db.reaction.update(
+                {
+                    where: {
+                        reactionId: reactionId,
+                        userId: userId
+                    },
+                    data: {
+                        reactionTypeId: reactionTypeId,
+                    }
+                })
+        } catch (error) {
+            return handlePrismaError(error);
+        }
+    }
+    static async deleteReaction(userId: number, options: { reactionId: number, }) {
+        try {
+            const { reactionId } = options;
+            return await db.reaction.delete(
+                {
+                    where: {
+                        reactionId: reactionId,
+                        userId: userId
+                    },
+                });
+        } catch (error) {
+            return handlePrismaError(error);
+        }
+    }
 
 
-    async deleteReaction(userId: number, options: { reactionId: number, }) {
-        const { reactionId } = options;
-        return await db.reaction.delete(
-            {
-                where: {
-                    reactionId: reactionId,
-                    userId: userId
-                },
-            });
-    },
 
 }
+
 export default ReactionController;

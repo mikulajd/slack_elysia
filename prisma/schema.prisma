@@ -11,8 +11,8 @@ generator client {
 datasource db {
   provider = "sqlite"
   // provider = "postgresql"
-  //url      = env("DATABASE_URL")
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
+  //V .env  DATABASE_URL="file:./dev.db" pre SQLITE
 }
 
 //Pouzivatel
@@ -29,7 +29,8 @@ model User {
   intiatedConversations Conversation[] @relation("initiator")
   recievedConversations Conversation[] @relation("recipient")
 
-  messages Message[] @relation("user")
+  refreshToken String?
+  messages     Message[] @relation("user")
 
   reactions Reaction[] @relation("user")
 

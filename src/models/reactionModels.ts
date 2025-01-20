@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, error, t } from 'elysia';
 export const reactionModels = new Elysia().model({
 
     'reaction.add': t.Object({

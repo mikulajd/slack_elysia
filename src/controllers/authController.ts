@@ -1,8 +1,10 @@
+import { error } from 'elysia';
 import db from '../db/prismaClient';
-import { hashPassword, comparePassword } from '../services/authServices'
+import { hashPassword, comparePassword, userInfo } from '../services/authServices'
+import { handlePrismaError } from '../services/prismaErrorHandler';
+abstract class AuthController {
 
-const AuthController = {
-    async register(
+    static async register(
         options: {
             firstName: string,
             lastName: string,
@@ -10,10 +12,18 @@ const AuthController = {
             password: string,
 
         }) {
-        const { firstName, lastName, email, password } = options;
-        const hashedPassword = await hashPassword(password);
         try {
-            await db.user.create({
+            const { firstName, lastName, email, password } = options;
+            const hashedPassword = await hashPassword(password);
+            const userExists = await db.user.findFirst({
+                where: {
+                    email: email,
+                }
+            });
+            if (userExists) {
+                return error(400, { message: 'User with this email already exists' });
+
+            } const user = await db.user.create({
                 data: {
                     firstName: firstName,
                     lastName: lastName,
@@ -21,43 +31,44 @@ const AuthController = {
                     password: hashedPassword!
                 }
             })
-            return 'Succesfull registration'
-
+            return userInfo(user);
         } catch (error) {
-            if (error.code == 'P2002') {
-                return 'User with this email already exists';
-            }
-            else {
-                console.log(error);
-            }
-        };
-    },
+            return handlePrismaError(error)
+        }
 
-    async login(
+    }
+    static async login(
         options: {
             email: string,
             password: string,
 
         }) {
-        const { email, password } = options;
-        const user = await db.user.findFirst({
-            where: {
-                email: email,
+        try {
+            const { email, password } = options;
+            const user = await db.user.findFirst({
+                where: {
+                    email: email,
+                }
+            });
+            if (!user) {
+                return error(400, { message: 'User with this email does not exist' });
+
             }
-        });
-        if (!user) {
-            return 'User with this email does not exist'
-
+            const isMatch = await comparePassword(password, user?.password)
+            if (!isMatch) {
+                return error(400, { message: 'Incorrect password' });
+            }
+            return userInfo(user);
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        const isMatch = await comparePassword(password, user?.password)
-        if (!isMatch) {
-            return 'Incorrect password'
+    }
+    static async getUsers() {
+        try {
+            return await db.user.findMany();
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return "Successfull login"
-    },
-
-    async getUsers() {
-        return await db.user.findMany();
     }
 }
 export default AuthController

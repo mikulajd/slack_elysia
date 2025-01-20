@@ -1,82 +1,99 @@
 import db from '../db/prismaClient';
+import { handlePrismaError } from '../services/prismaErrorHandler';
 
-const MessageController = {
+abstract class MessageController {
 
-    async sendMessage(userId: number, options: { conversationId: number, parentId?: number, messageContent: string, }) {
-        const { conversationId, messageContent, parentId } = options;
-        const conversation = await db.conversation.findFirst({ where: { conversationId: conversationId } })
-        if (!conversation || (conversation.initiatorId != userId && conversation.recipientId != userId)) {
-            return "You don't have access to this converation"
-        }
-        return await db.message.create({
-            data: {
-                userId: userId,
-                conversationId: conversationId,
-                messageContent: messageContent,
-                parentId: parentId
+    static async sendMessage(userId: number, options: { conversationId: number, parentId?: number, messageContent: string, }) {
+        try {
+            const { conversationId, messageContent, parentId } = options;
+            const conversation = await db.conversation.findFirst({ where: { conversationId: conversationId } })
+            if (!conversation || (conversation.initiatorId != userId && conversation.recipientId != userId)) {
+                return "You don't have access to this converation"
             }
-        })
-    },
-
-
-    async editMessage(userId: number, options: { messageId: number, messageContent: string }) {
-        const { messageId, messageContent } = options;
-        const message = await getMessageById(userId, messageId);
-        if (!message) {
-            return 'You dont have access to this message'
+            return await db.message.create({
+                data: {
+                    userId: userId,
+                    conversationId: conversationId,
+                    messageContent: messageContent,
+                    parentId: parentId
+                }
+            })
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return await db.message.update({
-            where: {
-                messageId: messageId
-            },
-            data: {
-                messageContent: messageContent
+    }
+    static async editMessage(userId: number, options: { messageId: number, messageContent: string }) {
+        try {
+            const { messageId, messageContent } = options;
+            const message = await getMessageById(userId, messageId);
+            if (!message) {
+                return 'You dont have access to this message'
             }
-        });
-    },
-
-    async deleteMessage(userId: number, options: { messageId: number, }) {
-        const { messageId } = options;
-        const message = await getMessageById(userId, messageId);
-        if (!message) {
-            return 'You dont have access to this message'
+            return await db.message.update({
+                where: {
+                    messageId: messageId
+                },
+                data: {
+                    messageContent: messageContent
+                }
+            });
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return await db.message.delete({
-            where: {
-                messageId: messageId
-            },
+    }
+    static async deleteMessage(userId: number, options: { messageId: number, }) {
+        try {
+            const { messageId } = options;
+            const message = await getMessageById(userId, messageId);
+            if (!message) {
+                return 'You dont have access to this message'
+            }
+            return await db.message.delete({
+                where: {
+                    messageId: messageId
+                },
 
-        });
-    },
-
-    async getReplies(userId: number, options: { messageId: number }) {
-        const { messageId } = options;
-        const message = await getMessageById(userId, messageId, { includeReplies: true, includeConversation: true });
-        if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
-            return 'You dont have access to this message'
+            });
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return message.replies;
-    },
-
-
-    async getReactions(userId: number, options: { messageId: number }) {
-        const { messageId } = options;
-        const message = await getMessageById(userId, messageId, { includeReactions: true, includeConversation: true });
-        if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
-            return 'You dont have access to this message'
+    }
+    static async getReplies(userId: number, options: { messageId: number }) {
+        try {
+            const { messageId } = options;
+            const message = await getMessageById(userId, messageId, { includeReplies: true, includeConversation: true });
+            if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
+                return 'You dont have access to this message'
+            }
+            return message.replies;
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return message.reactions;
-    },
-
-
-    async getParent(userId: number, options: { messageId: number }) {
-        const { messageId } = options;
-        const message = await getMessageById(userId, messageId, { includeParent: true, includeConversation: true });
-        if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
-            return 'You dont have access to this message'
+    }
+    static async getReactions(userId: number, options: { messageId: number }) {
+        try {
+            const { messageId } = options;
+            const message = await getMessageById(userId, messageId, { includeReactions: true, includeConversation: true });
+            if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
+                return 'You dont have access to this message'
+            }
+            return message.reactions;
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return message.parent;
-    },
+    }
+    static async getParent(userId: number, options: { messageId: number }) {
+        try {
+            const { messageId } = options;
+            const message = await getMessageById(userId, messageId, { includeParent: true, includeConversation: true });
+            if (!message || (message.conversation.initiatorId != userId && message.conversation.recipientId != userId)) {
+                return 'You dont have access to this message'
+            }
+            return message.parent;
+        } catch (error) {
+            return handlePrismaError(error);
+        }
+    }
 };
 
 async function getMessageById(

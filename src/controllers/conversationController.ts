@@ -1,75 +1,90 @@
 import db from '../db/prismaClient';
+import { handlePrismaError } from '../services/prismaErrorHandler';
 
-const ConversationController = {
-    async getUserConversations(userId: number) {
-        return await db.conversation.findMany({
-            where: {
-                OR: [
-                    { initiatorId: userId },
-                    { recipientId: userId }]
+abstract class ConversationController {
+    static async getUserConversations(userId: number) {
+        try {
+            return await db.conversation.findMany({
+                where: {
+                    OR: [
+                        { initiatorId: userId },
+                        { recipientId: userId }]
+                }
+            })
+        } catch (error) {
+            return handlePrismaError(error);
+        }
+    } static async getConversation(userId: number, options: { conversationId: number }) {
+        try {
+            const { conversationId } = options;
+            const conversation = await getConversationById(userId, conversationId);
+            if (!conversation) {
+                return 'You dont have access to this conversation'
             }
-        })
-    },
-
-    async getConversation(userId: number, options: { conversationId: number }) {
-        const { conversationId } = options;
-        const conversation = await getConversationById(userId, conversationId);
-        if (!conversation) {
-            return 'You dont have access to this conversation'
+            return conversation;
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return conversation;
-    },
-    async createConversation(userId: number, options: { recipientId: number, conversationName?: string }) {
-        const { recipientId, conversationName } = options;
+    } static async createConversation(userId: number, options: { recipientId: number, conversationName?: string }) {
+        try {
+            const { recipientId, conversationName } = options;
 
-        return await db.conversation.create({
-            data: {
-                initiatorId: userId,
-                recipientId: recipientId,
-                conversationName: conversationName,
+            return await db.conversation.create({
+                data: {
+                    initiatorId: userId,
+                    recipientId: recipientId,
+                    conversationName: conversationName,
+                }
+            })
+        } catch (error) {
+            return handlePrismaError(error);
+        }
+
+    } static async renameConversation(userId: number, options: { conversationId: number, conversationName: string }) {
+        try {
+            const { conversationId, conversationName } = options;
+            const conversation = await getConversationById(userId, conversationId);
+            if (!conversation) {
+                return 'You dont have access to this conversation'
             }
-        })
-
-    },
-    async renameConversation(userId: number, options: { conversationId: number, conversationName: string }) {
-        const { conversationId, conversationName } = options;
-        const conversation = await getConversationById(userId, conversationId);
-        if (!conversation) {
-            return 'You dont have access to this conversation'
+            return await db.conversation.update({
+                where: {
+                    conversationId: conversationId
+                },
+                data: {
+                    conversationName: conversationName
+                }
+            });
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return await db.conversation.update({
-            where: {
-                conversationId: conversationId
-            },
-            data: {
-                conversationName: conversationName
+    } static async deleteConversation(userId: number, options: { conversationId: number }) {
+        try {
+            const { conversationId } = options;
+            const conversation = await getConversationById(userId, conversationId);
+            if (!conversation) {
+                return 'You dont have access to this conversation'
             }
-        });
-    },
-
-
-    async deleteConversation(userId: number, options: { conversationId: number }) {
-        const { conversationId } = options;
-        const conversation = await getConversationById(userId, conversationId);
-        if (!conversation) {
-            return 'You dont have access to this conversation'
+            return db.conversation.delete({ where: { conversationId: conversationId } });
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return db.conversation.delete({ where: { conversationId: conversationId } });
-    },
-
-
-
-    async getMessages(userId: number, options: { conversationId: number }) {
-        const { conversationId } = options;
-        const conversation = await getConversationById(userId, conversationId, true);
-        if (!conversation) {
-            return 'You dont have access to this conversation'
+    } static async getMessages(userId: number, options: { conversationId: number }) {
+        try {
+            const { conversationId } = options;
+            const conversation = await getConversationById(userId, conversationId, true);
+            if (!conversation) {
+                return 'You dont have access to this conversation'
+            }
+            return conversation.messages;
+        } catch (error) {
+            return handlePrismaError(error);
         }
-        return conversation.messages;
-    },
+    }
 };
 
 async function getConversationById(userId: number, conversationId: number, includeMessages?: boolean) {
+
     const conversation = await db.conversation.findFirst({
         where:
         {
@@ -91,6 +106,7 @@ async function getConversationById(userId: number, conversationId: number, inclu
         }
     });
     return conversation;
+
 
 }
 export default ConversationController;
