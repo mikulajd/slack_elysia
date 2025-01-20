@@ -17,12 +17,18 @@ export async function comparePassword(password, storedHash) {
         console.error('Error comparing password:', error);
     }
 }
+export type UserData = {
+    userId: number;
+    email: string;
+};
 
 export function userInfo(user) {
-    return {
+    const data: UserData =
+    {
         userId: user.userId,
         email: user.email
     }
+    return data;
 }
 
 
